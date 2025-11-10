@@ -1,0 +1,41 @@
+## Ignorar archivos compilados de .NET
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+## Ignorar configuraciones locales
+appsettings.Development.json
+appsettings.Local.json
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Ignorar archivos de Visual Studio
+.vs/
+.vscode/
+*.swp
+*~
+
+## Ignorar secrets
+secrets.json
+*.key
+*.pfx
+
+## Ignorar logs
+logs/
+*.log
+
+## Ignorar base de datos local
+*.db
+*.sqlite
+
+## Ignorar node_modules (si hay frontend)
+node_modules/
+package-lock.json
+
+## Ignorar archivos temporales
+*.tmp
+*.temp

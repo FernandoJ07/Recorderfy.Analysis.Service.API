@@ -1,0 +1,289 @@
+### Variables
+@baseUrl = http://localhost:5100
+@pacienteId = 123e4567-e89b-12d3-a456-426614174000
+@imagenId = 987fcdeb-51a2-43f1-b456-123456789abc
+@imagenIdCocina = 111e1111-e11b-11d1-a111-111111111111
+@imagenIdFamilia = 222e2222-e22b-22d2-a222-222222222222
+
+### Health Check
+GET {{baseUrl}}/health
+
+###
+
+### 1. ✅ Establecer Línea Base - Escenario Parque con Perro
+# Mock retorna: "Persona sentada en un banco del parque con un perro marrón..."
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "imagenId": "{{imagenId}}",
+  "descripcionPaciente": "Veo una persona sentada en un banco del parque. Hay un perro marrón a su lado. La persona está sonriendo y parece estar disfrutando del día soleado. Hay árboles en el fondo y el cielo está despejado.",
+  "tiempoRespuestaSeg": 42.5,
+  "esLineaBase": true
+}
+
+###
+
+### 2. ✅ Seguimiento Normal - Escenario Cocina
+# Mock retorna: "Cocina moderna con electrodomésticos de acero inoxidable..."
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "imagenId": "{{imagenIdCocina}}",
+  "descripcionPaciente": "Es una cocina moderna. Veo una estufa, un refrigerador y un microondas. Hay frutas en la encimera y una cafetera. Todo está muy limpio y ordenado.",
+  "tiempoRespuestaSeg": 45.0,
+  "esLineaBase": false
+}
+
+###
+
+### 3. ✅ Seguimiento con Deterioro Leve - Descripción menos precisa
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "imagenId": "{{imagenIdFamilia}}",
+  "descripcionPaciente": "Hay personas sentadas... creo que están comiendo. Veo una mesa. Parece que hay varias personas, no estoy seguro cuántas. Están en una casa.",
+  "tiempoRespuestaSeg": 58.3,
+  "esLineaBase": false
+}
+
+###
+
+### 4. ⚠️ Seguimiento con Deterioro Moderado
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "imagenId": "{{imagenId}}",
+  "descripcionPaciente": "Veo algo afuera... una persona tal vez. Y hay un animal... no sé si es un gato o un perro. Hay plantas, o árboles. Hace buen tiempo.",
+  "tiempoRespuestaSeg": 72.8,
+  "esLineaBase": false
+}
+
+###
+
+### 5. 🚨 Seguimiento con Deterioro Severo - Confusión significativa
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "imagenId": "{{imagenIdCocina}}",
+  "descripcionPaciente": "No estoy seguro... veo cosas brillantes. Hay una caja grande. Y otras cajas. Todo es metal. No sé para qué sirven.",
+  "tiempoRespuestaSeg": 95.2,
+  "esLineaBase": false
+}
+
+###
+
+### 6. ✅ Paciente Nuevo - Nueva Línea Base (Escenario Familia)
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "234e5678-e89b-12d3-a456-426614174001",
+  "imagenId": "{{imagenIdFamilia}}",
+  "descripcionPaciente": "Una familia de cuatro personas están reunidas alrededor de una mesa. Están compartiendo una comida. Veo platos con comida, vasos con bebidas y todos están sonriendo. Parece una reunión familiar muy agradable.",
+  "tiempoRespuestaSeg": 38.5,
+  "esLineaBase": true
+}
+
+###
+
+### 6. Obtener Historial del Paciente
+GET {{baseUrl}}/api/analisis/paciente/{{pacienteId}}
+
+###
+
+### 7. Obtener Línea Base Activa
+GET {{baseUrl}}/api/analisis/linea-base/{{pacienteId}}
+
+###
+
+### 8. Obtener Análisis con Deterioro Detectado
+GET {{baseUrl}}/api/analisis/deterioro
+
+###
+
+### 9. Obtener Análisis Específico
+# Reemplaza {id} con un ID real de la respuesta anterior
+GET {{baseUrl}}/api/analisis/123e4567-e89b-12d3-a456-426614174999
+
+###
+
+### 10. Test con Request Inválido (Sin Campos Requeridos)
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}"
+}
+
+###
+
+### 11. Test con Descripción Muy Corta
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "{{pacienteId}}",
+  "imagenId": "{{imagenId}}",
+  "descripcionPaciente": "Nada.",
+  "tiempoRespuestaSeg": 15.0,
+  "esLineaBase": false
+}
+
+###
+
+### 12. Test con Paciente Diferente (Nueva Línea Base)
+POST {{baseUrl}}/api/analisis/analizar
+Content-Type: application/json
+
+{
+  "pacienteId": "234e5678-e89b-12d3-a456-426614174001",
+  "imagenId": "{{imagenId}}",
+  "descripcionPaciente": "Una persona mayor está leyendo un libro en una biblioteca. Hay estanterías llenas de libros detrás de ella. Lleva gafas y está concentrada en la lectura. La iluminación es cálida y acogedora.",
+  "tiempoRespuestaSeg": 38.5,
+  "esLineaBase": true
+}
+
+###
+
+### ==================== EVALUACIÓN COMPLETA (NUEVO FORMATO) ====================
+
+### 13. 🎯 Procesar Evaluación Completa (10 Preguntas)
+POST {{baseUrl}}/api/analisis/evaluacion-completa
+Content-Type: application/json
+
+{
+  "idPaciente": "{{pacienteId}}",
+  "idCuidador": "456e7890-e89b-12d3-a456-426614174000",
+  "preguntas": [
+    {
+      "idPicture": "1",
+      "imagenUrl": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400",
+      "descripcionReal": "María y yo en nuestra boda hace 40 años en la iglesia del pueblo",
+      "pacienteRespuesta": "Es una boda... creo que es mía. Hay una iglesia de fondo. Estamos vestidos elegantes, pero no recuerdo bien cuándo fue."
+    },
+    {
+      "idPicture": "2",
+      "imagenUrl": "https://images.unsplash.com/photo-1542042161784-26ab9e041e89?w=400",
+      "descripcionReal": "Nuestra casa azul donde vivimos 30 años en la calle principal",
+      "pacienteRespuesta": "Una casa. Es azul... o era azul. No estoy seguro si vivimos ahí o solo la visitamos."
+    },
+    {
+      "idPicture": "3",
+      "imagenUrl": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400",
+      "descripcionReal": "Mi hijo Carlos graduándose de la universidad en 1995",
+      "pacienteRespuesta": "Alguien con un birrete... una graduación. Creo que es mi hijo pero no recuerdo su nombre ahora."
+    },
+    {
+      "idPicture": "4",
+      "imagenUrl": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
+      "descripcionReal": "El parque donde solíamos pasear todos los domingos por la tarde",
+      "pacienteRespuesta": "Un parque. Hay árboles y un camino. Creo que he estado ahí antes pero no recuerdo cuándo."
+    },
+    {
+      "idPicture": "5",
+      "imagenUrl": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400",
+      "descripcionReal": "La fiesta de cumpleaños número 60 de María en el jardín",
+      "pacienteRespuesta": "Una fiesta afuera. Hay gente y decoraciones. No sé de quién es el cumpleaños."
+    },
+    {
+      "idPicture": "6",
+      "imagenUrl": "https://images.unsplash.com/photo-1618826411640-d6df44dd3f7a?w=400",
+      "descripcionReal": "Nuestro perro Max que tuvimos por 12 años",
+      "pacienteRespuesta": "Un perro. Era nuestro... se llamaba algo con M, Max creo. Era marrón o negro, no recuerdo bien."
+    },
+    {
+      "idPicture": "7",
+      "imagenUrl": "https://images.unsplash.com/photo-1567653218461-4b3e14edb838?w=400",
+      "descripcionReal": "Vacaciones en la playa con toda la familia en verano de 2005",
+      "pacienteRespuesta": "Una playa. Hay personas. Creo que son de mi familia pero no estoy seguro quiénes son."
+    },
+    {
+      "idPicture": "8",
+      "imagenUrl": "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=400",
+      "descripcionReal": "Mi padre en su taller de carpintería donde trabajó toda su vida",
+      "pacienteRespuesta": "Un taller con herramientas. Hay un hombre mayor... podría ser mi padre. Trabajaba con madera."
+    },
+    {
+      "idPicture": "9",
+      "imagenUrl": "https://images.unsplash.com/photo-1503235930437-8c6293ba41f5?w=400",
+      "descripcionReal": "El auto rojo que compré cuando me jubilé en 2010",
+      "pacienteRespuesta": "Un auto. Es rojo. No sé si es mío o de quién es."
+    },
+    {
+      "idPicture": "10",
+      "imagenUrl": "https://images.unsplash.com/photo-1551887373-6edba91ac599?w=400",
+      "descripcionReal": "La primera navidad de nuestra nieta Ana en nuestra casa",
+      "pacienteRespuesta": "Navidad. Hay un árbol y regalos. Creo que hay un bebé... mi nieta quizás."
+    }
+  ],
+  "fechaRealizacion": "2025-11-05T14:47:10.486Z",
+  "puntaje": 0
+}
+
+###
+
+### 14. 🎯 Evaluación Completa - Paciente con Mejor Estado Cognitivo
+POST {{baseUrl}}/api/analisis/evaluacion-completa
+Content-Type: application/json
+
+{
+  "idPaciente": "234e5678-e89b-12d3-a456-426614174001",
+  "idCuidador": "456e7890-e89b-12d3-a456-426614174000",
+  "preguntas": [
+    {
+      "idPicture": "1",
+      "imagenUrl": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400",
+      "descripcionReal": "María y yo en nuestra boda hace 40 años en la iglesia del pueblo",
+      "pacienteRespuesta": "Esta es nuestra boda con María hace exactamente 40 años. Nos casamos en la iglesia de San Pedro del pueblo. Recuerdo que fue un día muy especial."
+    },
+    {
+      "idPicture": "2",
+      "imagenUrl": "https://images.unsplash.com/photo-1542042161784-26ab9e041e89?w=400",
+      "descripcionReal": "Nuestra casa azul donde vivimos 30 años en la calle principal",
+      "pacienteRespuesta": "Nuestra querida casa azul en la calle principal donde vivimos 30 años. La compramos en 1980 y criamos a nuestros hijos ahí."
+    },
+    {
+      "idPicture": "3",
+      "imagenUrl": "https://images.unsplash.com/photo-1552053831-71594a27632d?w=400",
+      "descripcionReal": "Mi hijo Carlos graduándose de la universidad en 1995",
+      "pacienteRespuesta": "Mi hijo Carlos el día de su graduación en 1995. Se recibió de ingeniero. Fue un día de mucho orgullo para toda la familia."
+    },
+    {
+      "idPicture": "4",
+      "imagenUrl": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400",
+      "descripcionReal": "El parque donde solíamos pasear todos los domingos por la tarde",
+      "pacienteRespuesta": "El parque municipal donde íbamos a pasear todos los domingos por la tarde. Los niños jugaban mientras María y yo caminábamos."
+    },
+    {
+      "idPicture": "5",
+      "imagenUrl": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400",
+      "descripcionReal": "La fiesta de cumpleaños número 60 de María en el jardín",
+      "pacienteRespuesta": "El cumpleaños 60 de María celebrado en nuestro jardín. Vinieron todos nuestros hijos y nietos. Fue una celebración maravillosa."
+    }
+  ],
+  "fechaRealizacion": "2025-11-05T15:00:00.000Z",
+  "puntaje": 0
+}
+
+###
+
+### 15. Obtener Evaluación Completa por ID
+# Reemplaza con un ID real de la respuesta anterior
+GET {{baseUrl}}/api/analisis/evaluacion-completa/123e4567-e89b-12d3-a456-426614174999
+
+###
+
+### 16. Obtener Todas las Evaluaciones de un Paciente
+GET {{baseUrl}}/api/analisis/evaluacion-completa/paciente/{{pacienteId}}
+
+###

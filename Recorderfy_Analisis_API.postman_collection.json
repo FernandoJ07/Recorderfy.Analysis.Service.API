@@ -1,0 +1,167 @@
+{
+  "info": {
+    "name": "Recorderfy - Análisis Cognitivo API",
+    "description": "Colección de requests para probar la API de Análisis Cognitivo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5100",
+      "type": "string"
+    },
+    {
+      "key": "paciente_id_1",
+      "value": "550e8400-e29b-41d4-a716-446655440000",
+      "type": "string"
+    },
+    {
+      "key": "paciente_id_2",
+      "value": "660e8400-e29b-41d4-a716-446655440001",
+      "type": "string"
+    },
+    {
+      "key": "imagen_id_1",
+      "value": "770e8400-e29b-41d4-a716-446655440002",
+      "type": "string"
+    },
+    {
+      "key": "imagen_id_2",
+      "value": "880e8400-e29b-41d4-a716-446655440003",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/analisis/health",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "health"]
+        },
+        "description": "Verifica que el servicio esté funcionando correctamente"
+      }
+    },
+    {
+      "name": "2. Primera Evaluación (Línea Base)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pacienteId\": \"{{paciente_id_1}}\",\n  \"imagenId\": \"{{imagen_id_1}}\",\n  \"descripcionPaciente\": \"Veo una persona sentada en un banco con un perro marrón. La persona lleva ropa azul y el perro está mirando hacia adelante. Hay árboles en el fondo.\",\n  \"descripcionReal\": \"Una persona sonriente sentada en un banco del parque con un perro marrón a su lado. La persona lleva una camisa azul y el perro está mirando hacia la cámara. Hay árboles verdes en el fondo y el cielo está parcialmente nublado.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/analisis/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "analizar"]
+        },
+        "description": "Primera evaluación de un paciente nuevo. El sistema establece automáticamente la línea base."
+      }
+    },
+    {
+      "name": "3. Evaluación de Seguimiento (Sin Deterioro)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pacienteId\": \"{{paciente_id_1}}\",\n  \"imagenId\": \"{{imagen_id_2}}\",\n  \"descripcionPaciente\": \"Una persona sentada en un banco del parque junto a su perro marrón. La persona viste una camisa azul y el perro observa atentamente. Se ven árboles verdes detrás.\",\n  \"descripcionReal\": \"Una persona sonriente sentada en un banco del parque con un perro marrón a su lado. La persona lleva una camisa azul y el perro está mirando hacia la cámara. Hay árboles verdes en el fondo y el cielo está parcialmente nublado.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/analisis/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "analizar"]
+        },
+        "description": "Segunda evaluación del mismo paciente con descripción similar (sin deterioro)"
+      }
+    },
+    {
+      "name": "4. Evaluación de Seguimiento (Con Deterioro)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pacienteId\": \"{{paciente_id_1}}\",\n  \"imagenId\": \"{{imagen_id_2}}\",\n  \"descripcionPaciente\": \"Hay un animal y una persona ahí\",\n  \"descripcionReal\": \"Una persona sonriente sentada en un banco del parque con un perro marrón a su lado. La persona lleva una camisa azul y el perro está mirando hacia la cámara. Hay árboles verdes en el fondo y el cielo está parcialmente nublado.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/analisis/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "analizar"]
+        },
+        "description": "Evaluación con respuesta muy simple que indica posible deterioro cognitivo"
+      }
+    },
+    {
+      "name": "5. Obtener Historial de Paciente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/analisis/paciente/{{paciente_id_1}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "paciente", "{{paciente_id_1}}"]
+        },
+        "description": "Obtiene todos los análisis realizados a un paciente específico"
+      }
+    },
+    {
+      "name": "6. Obtener Línea Base del Paciente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/analisis/linea-base/{{paciente_id_1}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "linea-base", "{{paciente_id_1}}"]
+        },
+        "description": "Obtiene la línea base activa de un paciente"
+      }
+    },
+    {
+      "name": "7. Obtener Análisis con Deterioro",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/analisis/deterioro",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "deterioro"]
+        },
+        "description": "Obtiene todos los análisis donde se detectó deterioro cognitivo"
+      }
+    },
+    {
+      "name": "8. Obtener Análisis Específico",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/analisis/{analisisId}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "analisis", "{analisisId}"]
+        },
+        "description": "Obtiene un análisis específico por su ID. Reemplaza {analisisId} con el ID real obtenido de otro endpoint."
+      }
+    }
+  ]
+}
