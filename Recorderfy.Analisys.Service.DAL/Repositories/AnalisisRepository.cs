@@ -103,5 +103,30 @@ namespace Recorderfy.Analisys.Service.DAL.Repositories
                 .Include(a => a.LineaBase)
                 .ToListAsync();
         }
+
+        // ==================== MÉTODOS PARA EVALUACIONES COMPLETAS ====================
+
+        public async Task<EvaluacionCompleta> CrearEvaluacionCompletaAsync(EvaluacionCompleta evaluacion)
+        {
+            await _context.EvaluacionesCompletas.AddAsync(evaluacion);
+            await _context.SaveChangesAsync();
+            return evaluacion;
+        }
+
+        public async Task<EvaluacionCompleta> ObtenerEvaluacionCompletaPorIdAsync(Guid evaluacionId)
+        {
+            return await _context.EvaluacionesCompletas
+                .Include(e => e.LineaBase)
+                .FirstOrDefaultAsync(e => e.Id == evaluacionId);
+        }
+
+        public async Task<List<EvaluacionCompleta>> ObtenerEvaluacionesPorPacienteAsync(Guid pacienteId)
+        {
+            return await _context.EvaluacionesCompletas
+                .Where(e => e.PacienteId == pacienteId)
+                .Include(e => e.LineaBase)
+                .OrderByDescending(e => e.FechaEvaluacion)
+                .ToListAsync();
+        }
     }
 }

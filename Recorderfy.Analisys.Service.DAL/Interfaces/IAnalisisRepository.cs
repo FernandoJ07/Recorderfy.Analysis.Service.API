@@ -17,5 +17,10 @@ namespace Recorderfy.Analisys.Service.DAL.Interfaces
         Task<LineaBase> CrearLineaBaseAsync(LineaBase lineaBase);
         Task ActualizarLineaBaseAsync(LineaBase lineaBase);
         Task<List<AnalisisCognitivo>> ObtenerAnalisisConDeterioroAsync();
+
+        // Métodos para evaluaciones completas
+        Task<EvaluacionCompleta> CrearEvaluacionCompletaAsync(EvaluacionCompleta evaluacion);
+        Task<EvaluacionCompleta> ObtenerEvaluacionCompletaPorIdAsync(Guid evaluacionId);
+        Task<List<EvaluacionCompleta>> ObtenerEvaluacionesPorPacienteAsync(Guid pacienteId);
     }
 }

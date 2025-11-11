@@ -11,9 +11,13 @@ namespace Recorderfy.Analisys.Service.BLL.Interfaces
     {
         // Análisis individual (backward compatibility)
         Task<AnalisisResponse> RealizarAnalisisAsync(AnalisisRequest request);
+
+        // Análisis múltiple para línea base
+        Task<List<AnalisisResponse>> RealizarAnalisisMultipleAsync(List<AnalisisRequest> requests, Guid pacienteId);
+
         Task<AnalisisResponse> ObtenerAnalisisPorIdAsync(int id);
         Task<List<AnalisisResponse>> ObtenerHistorialPacienteAsync(int pacienteId);
-        
+
         // Evaluación completa (múltiples preguntas)
         Task<EvaluacionCompletaResponse> ProcesarEvaluacionCompletaAsync(EvaluacionCompletaRequest request);
         Task<EvaluacionCompletaResponse> ObtenerEvaluacionCompletaPorIdAsync(Guid evaluacionId);

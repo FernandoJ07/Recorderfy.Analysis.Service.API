@@ -10,5 +10,12 @@ namespace Recorderfy.Analisys.Service.BLL.Interfaces
             string descripcionReal, 
             string metadataJson,
             float? scoreBaselinePrevio = null);
+
+        /// <summary>
+        /// Analiza un cuestionario completo (múltiples preguntas) en una sola llamada
+        /// </summary>
+        Task<GeminiCuestionarioResponse> AnalizarCuestionarioCompletoAsync(
+            List<AnalisisRequest> preguntas,
+            float? scoreBaselinePrevio = null);
     }
 }
