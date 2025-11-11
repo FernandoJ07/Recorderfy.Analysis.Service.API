@@ -19,7 +19,7 @@ namespace Recorderfy.Analisys.Service.BLL.Services
         private readonly string _apiUrl;
 
         public GeminiService(
-            IHttpClientFactory httpClientFactory, 
+            IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
             ILogRepository logRepository)
         {
@@ -28,13 +28,13 @@ namespace Recorderfy.Analisys.Service.BLL.Services
             _logRepository = logRepository;
             _apiKey = _configuration["Gemini:ApiKey"];
             _apiUrl = _configuration["Gemini:ApiUrl"];
-            }
-            
+        }
+
         public async Task<GeminiAnalisisResponse> AnalizarConGeminiAsync(
-            string descripcionPaciente, 
-            string descripcionReal, 
-            string metadataJson,
-            float? scoreBaselinePrevio = null)
+    string descripcionPaciente,
+    string descripcionReal,
+    string metadataJson,
+    float? scoreBaselinePrevio = null)
         {
             try
             {
@@ -42,21 +42,20 @@ namespace Recorderfy.Analisys.Service.BLL.Services
                     "Iniciando análisis con Google Gemini");
 
                 var prompt = ConstruirPrompt(descripcionPaciente, descripcionReal, metadataJson, scoreBaselinePrevio);
-                
                 var client = _httpClientFactory.CreateClient();
-                
+
                 var requestBody = new
                 {
                     contents = new[]
                     {
-                        new
-                        {
-                            parts = new[]
-                            {
-                                new { text = prompt }
-                            }
-                        }
-                    },
+                new
+                {
+                    parts = new[]
+                    {
+                        new { text = prompt }
+                    }
+                }
+            },
                     generationConfig = new
                     {
                         temperature = 0.2,
@@ -70,62 +69,54 @@ namespace Recorderfy.Analisys.Service.BLL.Services
                 var jsonContent = JsonSerializer.Serialize(requestBody);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // CORRECCIÓN: Usar HttpRequestMessage para agregar headers personalizados
                 var request = new HttpRequestMessage(HttpMethod.Post, _apiUrl)
                 {
                     Content = content
                 };
-                
-                // Agregar la API Key en el header como Gemini lo espera
                 request.Headers.Add("x-goog-api-key", _apiKey);
 
-                await _logRepository.RegistrarAsync("INFO", "GeminiService",
-                    $"Enviando request a: {_apiUrl}");
-
                 var response = await client.SendAsync(request);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
                     await _logRepository.RegistrarAsync("ERROR", "GeminiService",
-                        $"Error en llamada a Gemini API: {response.StatusCode}",
-                        errorContent);
+                        $"Error en llamada a Gemini API: {response.StatusCode}", responseContent);
                     throw new Exception($"Error al llamar a Gemini API: {response.StatusCode}");
                 }
 
-                var responseContent = await response.Content.ReadAsStringAsync();
                 var geminiResponse = JsonSerializer.Deserialize<GeminiApiResponse>(responseContent);
-
-                // Extraer el JSON del texto de respuesta
                 var responseText = geminiResponse?.candidates?[0]?.content?.parts?[0]?.text;
-                
-                if (string.IsNullOrEmpty(responseText))
-                {
+
+                if (string.IsNullOrWhiteSpace(responseText))
                     throw new Exception("Respuesta vacía de Gemini API");
-                }
 
-                // Limpiar el texto (remover markdown si existe)
-                responseText = responseText.Trim();
-                if (responseText.StartsWith("```json"))
-                {
-                    responseText = responseText.Substring(7);
-                }
-                if (responseText.StartsWith("```"))
-                {
-                    responseText = responseText.Substring(3);
-                }
-                if (responseText.EndsWith("```"))
-                {
-                    responseText = responseText.Substring(0, responseText.Length - 3);
-                }
-                responseText = responseText.Trim();
+                responseText = SanitizarJsonGemini(responseText);
 
-                var analisisResponse = JsonSerializer.Deserialize<GeminiAnalisisResponse>(responseText, 
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                await _logRepository.RegistrarAsync("DEBUG", "GeminiService", $"JSON limpio recibido: {responseText}");
+
+                GeminiAnalisisResponse analisisResponse;
+                try
+                {
+                    analisisResponse = JsonSerializer.Deserialize<GeminiAnalisisResponse>(
+                        responseText,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true,
+                            AllowTrailingCommas = true,
+                            ReadCommentHandling = JsonCommentHandling.Skip
+                        });
+                }
+                catch (JsonException ex)
+                {
+                    await _logRepository.RegistrarAsync("ERROR", "GeminiService",
+                        $"Error al deserializar JSON: {ex.Message}", responseText);
+                    throw new Exception("El JSON devuelto por Gemini está incompleto o mal formado.", ex);
+                }
 
                 await _logRepository.RegistrarAsync("INFO", "GeminiService",
                     "Análisis completado exitosamente",
-                    datosAdicionales: JsonSerializer.Serialize(analisisResponse));
+                    JsonSerializer.Serialize(analisisResponse));
 
                 return analisisResponse;
             }
@@ -137,14 +128,24 @@ namespace Recorderfy.Analisys.Service.BLL.Services
             }
         }
 
-        private string ConstruirPrompt(string descripcionPaciente, string descripcionReal, 
-            string metadataJson, float? scoreBaselinePrevio)
-        {
-            var baselineInfo = scoreBaselinePrevio.HasValue 
-                ? $"\n\nSCORE BASELINE PREVIO: {scoreBaselinePrevio.Value}\nRealiza comparación con este valor para detectar deterioro."
-                : "\n\nEsta es una EVALUACIÓN INICIAL (línea base). No hay datos previos para comparar.";
 
-            return $@"Eres un especialista en neurología cognitiva experto en detección de Alzheimer.
+
+
+
+private string ConstruirPrompt(string descripcionPaciente, string descripcionReal,
+    string metadataJson, float? scoreBaselinePrevio)
+{
+    var baselineInfo = scoreBaselinePrevio.HasValue
+        ? $@"
+SCORE BASELINE PREVIO: {scoreBaselinePrevio.Value:F2}
+Debes calcular la diferencia con este baseline y determinar si hay deterioro."
+        : @"
+PRIMERA EVALUACIÓN (LÍNEA BASE): No hay datos previos. En comparacion_con_baseline usa:
+- diferencia_score: 0.0
+- deterioro_detectado: false
+- nivel_cambio: ""estable""";
+
+    return $@"Eres un especialista en neurología cognitiva experto en detección de Alzheimer.
 
 TAREA: Analiza la descripción de una imagen dada por un paciente y compárala con la descripción real.
 
@@ -159,40 +160,48 @@ METADATA DE LA IMAGEN:
 {baselineInfo}
 
 CRITERIOS DE EVALUACIÓN:
-
 1. score_semantico (0-100): Precisión en el significado general de la escena
 2. score_objetos (0-100): Precisión en identificación de objetos presentes
 3. score_acciones (0-100): Precisión en descripción de acciones/actividades
-4. falsos_objetos (número): Cantidad de objetos mencionados que NO están en la imagen
-5. tiempo_respuesta_seg: Tiempo que tardó en responder (proporcionado)
+4. falsos_objetos: Cantidad de objetos mencionados que NO están en la imagen
+5. tiempo_respuesta_seg: Estimado de tiempo de respuesta (usa 30.0 si no conoces)
 6. coherencia_linguistica (0-100): Fluidez, gramática y coherencia del discurso
 7. score_global (0-100): Promedio ponderado de todos los scores
 
 INTERPRETACIÓN DE DETERIORO:
-- diferencia_score > 0 y < 5: estable
-- diferencia_score >= 5 y < 15: leve
-- diferencia_score >= 15 y < 30: moderado
-- diferencia_score >= 30: severo
+- diferencia_score entre -5 y 5: estable
+- diferencia_score entre 5 y 15 O entre -15 y -5: leve
+- diferencia_score entre 15 y 30 O entre -30 y -15: moderado
+- diferencia_score mayor a 30 O menor a -30: severo
 
-FORMATO DE RESPUESTA (JSON ESTRICTO):
+FORMATO DE RESPUESTA - DEVUELVE EXACTAMENTE ESTE JSON (reemplaza los valores):
 {{
-  ""score_semantico"": float,
-  ""score_objetos"": float,
-  ""score_acciones"": float,
-  ""falsos_objetos"": int,
-  ""tiempo_respuesta_seg"": float,
-  ""coherencia_linguistica"": float,
-  ""score_global"": float,
-  ""observaciones"": ""string detallada explicando hallazgos clave"",
+  ""score_semantico"": 85.5,
+  ""score_objetos"": 90.0,
+  ""score_acciones"": 80.0,
+  ""falsos_objetos"": 2,
+  ""tiempo_respuesta_seg"": 30.0,
+  ""coherencia_linguistica"": 88.0,
+  ""score_global"": 85.0,
+  ""observaciones"": ""Descripción detallada de los hallazgos principales"",
   ""comparacion_con_baseline"": {{
-    ""diferencia_score"": float,
-    ""deterioro_detectado"": boolean,
-    ""nivel_cambio"": ""estable|leve|moderado|severo""
+    ""diferencia_score"": 0.0,
+    ""deterioro_detectado"": false,
+    ""nivel_cambio"": ""estable""
   }}
 }}
 
-IMPORTANTE: Devuelve SOLO el JSON, sin explicaciones adicionales.";
-        }
+REGLAS CRÍTICAS:
+1. Devuelve ÚNICAMENTE el objeto JSON, sin texto adicional antes o después
+2. NO uses comillas simples, solo comillas dobles
+3. TODOS los números deben tener al menos un decimal (85.0, no 85)
+4. NO dejes campos vacíos o undefined
+5. El campo nivel_cambio debe ser EXACTAMENTE uno de estos: ""estable"", ""leve"", ""moderado"", ""severo""
+6. NO agregues comentarios dentro del JSON
+7. Asegúrate que todas las llaves {{ }} estén balanceadas
+
+Responde AHORA con el JSON:";
+}
 
         // Clase auxiliar para deserializar respuesta de Gemini
         private class GeminiApiResponse
@@ -214,5 +223,49 @@ IMPORTANTE: Devuelve SOLO el JSON, sin explicaciones adicionales.";
         {
             public string text { get; set; }
         }
+
+        private string SanitizarJsonGemini(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+                return "{}";
+
+            texto = texto.Trim();
+
+            // Quitar etiquetas Markdown
+            if (texto.StartsWith("```json")) texto = texto[7..];
+            if (texto.StartsWith("```")) texto = texto[3..];
+            if (texto.EndsWith("```")) texto = texto[..^3];
+
+            // Eliminar saltos, escapes y caracteres rotos
+            texto = texto
+                .Replace("\\n", " ")
+                .Replace("\n", " ")
+                .Replace("\r", " ")
+                .Replace("\\\"", "\"")
+                .Trim();
+
+            // Extraer bloque JSON (entre llaves)
+            int start = texto.IndexOf('{');
+            int end = texto.LastIndexOf('}');
+            if (start >= 0 && end > start)
+                texto = texto.Substring(start, end - start + 1);
+
+            // Corregir números tipo "8." -> "8.0"
+            texto = System.Text.RegularExpressions.Regex.Replace(texto, @"(\d+)\.(\s*[,}])", "$1.0$2");
+
+            // Corregir cadenas sin comillas finales
+            texto = System.Text.RegularExpressions.Regex.Replace(texto, @":\s*""([^""]*)$", ": \"$1\"");
+
+            // Verificar que termina con llave
+            if (!texto.EndsWith("}"))
+                texto += "}";
+
+            // Asegurar apertura
+            if (!texto.StartsWith("{"))
+                texto = "{" + texto;
+
+            return texto;
+        }
     }
+
 }
