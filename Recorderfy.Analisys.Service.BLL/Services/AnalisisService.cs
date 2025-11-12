@@ -598,11 +598,18 @@ namespace Recorderfy.Analisys.Service.BLL.Services
                 observaciones.AppendLine($"Se detectó deterioro en {preguntasConDeterioro} de {resultados.Count} preguntas.");
             }
 
-            var scoresOrdenados = resultados.OrderBy(r => r.ScoreGlobal).ToList();
+            var scoresOrdenados = resultados
+                .Select((resultado, index) => new { Resultado = resultado, NumeroPregunta = index + 1 })
+                .OrderBy(x => x.Resultado.ScoreGlobal)
+                .ToList();
+
             if (scoresOrdenados.Any())
             {
-                observaciones.AppendLine($"Mejor desempeño: Pregunta {scoresOrdenados.Last().IdPicture} ({scoresOrdenados.Last().ScoreGlobal:F2})");
-                observaciones.AppendLine($"Mayor dificultad: Pregunta {scoresOrdenados.First().IdPicture} ({scoresOrdenados.First().ScoreGlobal:F2})");
+                var mejor = scoresOrdenados.Last();
+                var peor = scoresOrdenados.First();
+                
+                observaciones.AppendLine($"Mejor desempeño: Pregunta #{mejor.NumeroPregunta} ({mejor.Resultado.ScoreGlobal:F2})");
+                observaciones.AppendLine($"Mayor dificultad: Pregunta #{peor.NumeroPregunta} ({peor.Resultado.ScoreGlobal:F2})");
             }
 
             return observaciones.ToString();
