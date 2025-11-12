@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Recorderfy.Analisys.Service.Model.Entities
 {
@@ -37,6 +38,7 @@ namespace Recorderfy.Analisys.Service.Model.Entities
         [MaxLength(1000)]
         public string Notas { get; set; }
 
+        [JsonIgnore] // Evitar ciclo de serialización - usar DTOs para incluir análisis
         public virtual ICollection<AnalisisCognitivo> Analisis { get; set; }
 
         public LineaBase()

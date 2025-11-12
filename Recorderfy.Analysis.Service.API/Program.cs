@@ -4,12 +4,20 @@ using Recorderfy.Analisys.Service.BLL.Services;
 using Recorderfy.Analisys.Service.DAL.Data;
 using Recorderfy.Analisys.Service.DAL.Interfaces;
 using Recorderfy.Analisys.Service.DAL.Repositories;
+using Recorderfy.Analysis.Service.API.Consumer;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configurar para manejar referencias circulares (por si acaso)
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -29,6 +37,9 @@ builder.Services.AddScoped<ILogRepository, LogRepository>();
 // Services
 builder.Services.AddScoped<IAnalisisService, AnalisisService>();
 builder.Services.AddScoped<IGeminiService, GeminiService>();
+
+// RabbitMQ Consumer as Hosted Service
+builder.Services.AddHostedService<RabbitMqConsumer>();
 
 var app = builder.Build();
 

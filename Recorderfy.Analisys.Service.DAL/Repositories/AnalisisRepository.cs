@@ -28,16 +28,16 @@ namespace Recorderfy.Analisys.Service.DAL.Repositories
         public async Task<AnalisisCognitivo> ObtenerPorIdAsync(Guid id)
         {
             return await _context.AnalisisCognitivo
-                .Include(a => a.LineaBase)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<List<AnalisisCognitivo>> ObtenerPorPacienteAsync(Guid pacienteId)
         {
             return await _context.AnalisisCognitivo
+                .AsNoTracking()
                 .Where(a => a.PacienteId == pacienteId)
                 .OrderByDescending(a => a.FechaAnalisis)
-                .Include(a => a.LineaBase)
                 .ToListAsync();
         }
 
@@ -52,9 +52,9 @@ namespace Recorderfy.Analisys.Service.DAL.Repositories
         public async Task<List<AnalisisCognitivo>> ObtenerSeguimientosPorPacienteAsync(Guid pacienteId)
         {
             return await _context.AnalisisCognitivo
+                .AsNoTracking()
                 .Where(a => a.PacienteId == pacienteId && !a.EsLineaBase)
                 .OrderByDescending(a => a.FechaAnalisis)
-                .Include(a => a.LineaBase)
                 .ToListAsync();
         }
 
@@ -98,9 +98,9 @@ namespace Recorderfy.Analisys.Service.DAL.Repositories
         public async Task<List<AnalisisCognitivo>> ObtenerAnalisisConDeterioroAsync()
         {
             return await _context.AnalisisCognitivo
+                .AsNoTracking()
                 .Where(a => a.DeterioroDetectado == true)
                 .OrderByDescending(a => a.FechaAnalisis)
-                .Include(a => a.LineaBase)
                 .ToListAsync();
         }
 
@@ -116,15 +116,15 @@ namespace Recorderfy.Analisys.Service.DAL.Repositories
         public async Task<EvaluacionCompleta> ObtenerEvaluacionCompletaPorIdAsync(Guid evaluacionId)
         {
             return await _context.EvaluacionesCompletas
-                .Include(e => e.LineaBase)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == evaluacionId);
         }
 
         public async Task<List<EvaluacionCompleta>> ObtenerEvaluacionesPorPacienteAsync(Guid pacienteId)
         {
             return await _context.EvaluacionesCompletas
+                .AsNoTracking()
                 .Where(e => e.PacienteId == pacienteId)
-                .Include(e => e.LineaBase)
                 .OrderByDescending(e => e.FechaEvaluacion)
                 .ToListAsync();
         }

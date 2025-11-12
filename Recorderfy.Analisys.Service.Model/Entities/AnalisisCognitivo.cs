@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Recorderfy.Analisys.Service.Model.Entities
 {
@@ -82,6 +83,7 @@ namespace Recorderfy.Analisys.Service.Model.Entities
         public Guid? LineaBaseId { get; set; }
 
         [ForeignKey("LineaBaseId")]
+        [JsonIgnore] // Evitar ciclo de serialización
         public virtual LineaBase LineaBase { get; set; }
 
         [Required]
